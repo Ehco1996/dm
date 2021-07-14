@@ -23,6 +23,7 @@ import (
 
 	"github.com/pingcap/errors"
 	globalLog "github.com/pingcap/log"
+	"github.com/pyroscope-io/pyroscope/pkg/agent/profiler"
 	"go.uber.org/zap"
 
 	"github.com/pingcap/dm/dm/ctl/common"
@@ -52,6 +53,20 @@ func main() {
 	if err != nil {
 		common.PrintLinesf("init logger error %s", terror.Message(err))
 		os.Exit(2)
+	}
+
+	// NOTE: start send pprof to online pyroscope profiler, more doc: https://github.com/pyroscope-io/pyroscope
+	pyroscopeAPPName := os.Getenv("PYROSCOPE_APP_NAME")
+	pyroscopeServerUrl := os.Getenv("PYROSCOPE_SERVER_URL")
+	if pyroscopeAPPName != "" && pyroscopeServerUrl != "" {
+		if _, err := profiler.Start(profiler.Config{
+			ApplicationName: pyroscopeAPPName,
+			ServerAddress:   pyroscopeServerUrl,
+		}); err != nil {
+			common.PrintLinesf("start pyroscope url=%s err=%s", pyroscopeServerUrl, terror.Message(err))
+			os.Exit(2)
+		}
+		common.PrintLinesf("start send pprof to=%s", pyroscopeServerUrl)
 	}
 
 	// currently only schema tracker use global logger(std logger), simply replace it with `error` level

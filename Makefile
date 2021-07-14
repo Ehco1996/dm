@@ -3,6 +3,7 @@ LDFLAGS += -X "github.com/pingcap/dm/pkg/utils.BuildTS=$(shell date -u '+%Y-%m-%
 LDFLAGS += -X "github.com/pingcap/dm/pkg/utils.GitHash=$(shell git rev-parse HEAD)"
 LDFLAGS += -X "github.com/pingcap/dm/pkg/utils.GitBranch=$(shell git rev-parse --abbrev-ref HEAD)"
 LDFLAGS += -X "github.com/pingcap/dm/pkg/utils.GoVersion=$(shell go version)"
+LDFLAGS += -X "google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn"
 
 CURDIR   := $(shell pwd)
 GO       := GO111MODULE=on go
