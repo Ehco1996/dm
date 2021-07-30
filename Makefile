@@ -32,7 +32,7 @@ ifeq ("$(WITH_RACE)", "0")
 	TEST_RACE_FLAG =
 	GOTEST         = CGO_ENABLED=0 $(GO) test
 endif
-
+echo "123"
 FAILPOINT_ENABLE  := $$(echo $(FAILPOINT_DIR) | xargs $(FAILPOINT) enable >/dev/null)
 FAILPOINT_DISABLE := $$(find $(FAILPOINT_DIR) | xargs $(FAILPOINT) disable >/dev/null)
 
