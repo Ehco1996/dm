@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - release-2.0
+      - test-ci
   schedule:
     - cron: "3 22 * * *" # run at minute 06:03 UTC+8
   workflow_dispatch:
@@ -20,57 +21,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  from_v1:
-    name: From V1
-    runs-on: ubuntu-18.04
-    env:
-      working-directory: ${{ github.workspace }}/go/src/github.com/pingcap/dm
-
-    steps:
-      - name: Set up Go 1.16
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.16
-      - name: Check out code
-        uses: actions/checkout@v2
-        with:
-          path: go/src/github.com/pingcap/dm
-
-      - name: Setup containers
-        working-directory: ${{ env.working-directory }}
-        run: |
-          cd ${{ env.working-directory }}/tests/tiup/docker
-          GOPATH=${GITHUB_WORKSPACE}/go docker-compose up -d
-
-      - name: Run test cases
-        working-directory: ${{ env.working-directory }}
-        run: |
-          cd ${{ env.working-directory }}/tests/tiup/docker
-          docker-compose exec -T control bash -c "cd /go/src/github.com/pingcap/dm && ./tests/tiup/upgrade-from-v1.sh"
-
-      # send Slack notify if failed.
-      # NOTE: With the exception of `GITHUB_TOKEN`, secrets are not passed to the runner when a workflow is triggered from a forked repository.
-      - name: Slack notification
-        if: ${{ failure() }}
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_NOTIFY }}
-        uses: Ilshidur/action-slack@2.1.0
-        with:
-          args: "upgrade job failed, see https://github.com/pingcap/dm/actions/runs/{{ GITHUB_RUN_ID }}"
-
-      - name: Feishu notification
-        if: ${{ failure() }}
-        env:
-          FEISHU_BOT_WEBHOOK_URL: ${{ secrets.FEISHU_BOT_WEBHOOK_URL }}
-          GIT_COMMITTER_NAME: ${{ github.event.pusher.name }}
-        run: go run tests/_utils/send_lark_notify.go
-
-      # Debug via SSH if previous steps failed
-      - name: Set up tmate session
-        if: ${{ failure() }}
-        uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 30
-
   from_v2:
     name: From V2
     runs-on: ubuntu-18.04
@@ -79,7 +29,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        previous_v2: ["v2.0.0", "v2.0.1", "v2.0.3", "v2.0.4", "v2.0.5", "v2.0.6"]
+        previous_v2:
+          ["v2.0.0", "v2.0.1", "v2.0.3", "v2.0.4", "v2.0.5", "v2.0.6"]
 
     steps:
       - name: Set up Go 1.16
@@ -142,7 +93,9 @@ jobs:
         working-directory: ${{ env.working-directory }}
         run: |
           cd ${{ env.working-directory }}/tests/tiup/docker
-          docker-compose exec -e ref=${{ github.ref }} -T control bash -c "cd /go/src/github.com/pingcap/dm && ./tests/tiup/upgrade-from-v2.sh ${{ matrix.previous_v2 }} nightly"
+          pwd
+          ls
+          # docker-compose exec -e ref=${{ github.ref }} -T control bash -c "cd /go/src/github.com/pingcap/dm && ./tests/tiup/upgrade-from-v2.sh ${{ matrix.previous_v2 }} nightly"
 
       # if above step is passed, logs will be removed by tiup dm destroy
       - name: Copy logs to hack permission
@@ -179,7 +132,10 @@ jobs:
         env:
           FEISHU_BOT_WEBHOOK_URL: ${{ secrets.FEISHU_BOT_WEBHOOK_URL }}
           GIT_COMMITTER_NAME: ${{ github.event.pusher.name }}
-        run: go run tests/_utils/send_lark_notify.go
+        run: |
+          pwd
+          ls
+          go run tests/_utils/send_lark_notify.go
 
       # Debug via SSH if previous steps failed
       - name: Set up tmate session
