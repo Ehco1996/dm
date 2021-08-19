@@ -128,6 +128,7 @@ jobs:
           args: "upgrade-via-tiup job failed, see https://github.com/pingcap/dm/actions/runs/{{ GITHUB_RUN_ID }}"
 
       - name: Feishu notification
+        if: ${{ failure() }}
         env:
           FEISHU_BOT_WEBHOOK_URL: ${{ secrets.FEISHU_BOT_WEBHOOK_URL }}
           GIT_COMMITTER_NAME: ${{ github.event.pusher.name }}
