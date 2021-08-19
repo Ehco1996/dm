@@ -6,14 +6,6 @@ on:
       - master
       - release-2.0
       - test-ci
-  schedule:
-    - cron: "3 22 * * *" # run at minute 06:03 UTC+8
-  workflow_dispatch:
-    inputs: # TODO: use these inputs
-      fromVer:
-        dmVer: "v1.0.7"
-      toVer:
-        dmVer: "nightly"
 
 # See: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency.
 concurrency:
@@ -30,7 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         previous_v2:
-          ["v2.0.0", "v2.0.1", "v2.0.3", "v2.0.4", "v2.0.5", "v2.0.6"]
+          ["v2.0.0", "v2.0.1", "v2.0.3", "v2.0.4", "v2.0.5"]
 
     steps:
       - name: Set up Go 1.16
@@ -95,6 +87,7 @@ jobs:
           cd ${{ env.working-directory }}/tests/tiup/docker
           pwd
           ls
+          exit 1
           # docker-compose exec -e ref=${{ github.ref }} -T control bash -c "cd /go/src/github.com/pingcap/dm && ./tests/tiup/upgrade-from-v2.sh ${{ matrix.previous_v2 }} nightly"
 
       # if above step is passed, logs will be removed by tiup dm destroy
