@@ -41,11 +41,6 @@ jobs:
         with:
           path: go/src/github.com/pingcap/dm
 
-      - name: Build
-        if: ${{ github.ref != 'refs/heads/master' }}
-        working-directory: ${{ env.working-directory }}
-        run: make build nolint=true
-
       - name: Package files
         if: ${{ github.ref != 'refs/heads/master' }}
         run: |
@@ -72,12 +67,6 @@ jobs:
           cp -r ${{ env.working-directory }}/dm/dm-ansible/conf dmctl/conf
           cp -r ${{ env.working-directory }}/dm/dm-ansible/scripts dmctl/scripts
           tar -czvf dmctl-nightly-linux-amd64.tar.gz dmctl
-
-      - name: Setup containers
-        working-directory: ${{ env.working-directory }}
-        run: |
-          cd ${{ env.working-directory }}/tests/tiup/docker
-          GOPATH=${GITHUB_WORKSPACE}/go docker-compose up -d
 
       - name: Copy package files
         if: ${{ github.ref != 'refs/heads/master' }}
@@ -133,6 +122,9 @@ jobs:
           FEISHU_BOT_WEBHOOK_URL: ${{ secrets.FEISHU_BOT_WEBHOOK_URL }}
           GIT_COMMITTER_NAME: ${{ github.event.pusher.name }}
         run: |
+          pwd
+          ls
+          cd ${{ env.working-directory }}
           pwd
           ls
           go run tests/_utils/send_lark_notify.go
