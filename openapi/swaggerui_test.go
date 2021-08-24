@@ -23,10 +23,15 @@ func (t *swaggerUISuite) TestNewSwaggerDocUI(c *check.C) {
 	req, _ := http.NewRequest("GET", "/api/v1/docs", nil)
 	req = req.WithContext(context.TODO()) // make lint happy
 
-	mw, err := NewSwaggerDocUI(NewSwaggerConfig("/api/v1/docs", "/api/v1/docs/dm.json", ""), []byte{})
+	cfg := NewSwaggerConfig("/api/v1/docs", "/api/v1/docs/dm.json", "")
+	docUIHandler, err := NewSwaggerDocUIHandler(cfg)
 	c.Assert(err, check.IsNil)
+	docJSONHandler := NewSwaggerDocJSONHandler([]byte{})
+
 	e := echo.New()
-	e.Pre(mw)
+	e.GET(cfg.DocPath, docUIHandler)
+	e.GET(cfg.SpecJSONPath, docJSONHandler)
+
 	handler := e.Server.Handler
 	recorder := httptest.NewRecorder()
 	handler.ServeHTTP(recorder, req)

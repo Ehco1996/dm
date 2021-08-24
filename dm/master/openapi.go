@@ -44,13 +44,16 @@ func (s *Server) InitOpenAPIHandles() {
 	swagger.AddServer(&openapi3.Server{URL: fmt.Sprintf("http://%s", s.cfg.AdvertiseAddr)})
 	swaggerJSON, err := swagger.MarshalJSON()
 	checkServerErr(err)
-	docMW, err := openapi.NewSwaggerDocUI(openapi.NewSwaggerConfig(docBasePath, docJSONBasePath, ""), swaggerJSON)
+
+	docCFG := openapi.NewSwaggerConfig(docBasePath, docJSONBasePath, "")
+	docUIHandler, err := openapi.NewSwaggerDocUIHandler(docCFG)
 	checkServerErr(err)
+	docJSONHandler := openapi.NewSwaggerDocJSONHandler(swaggerJSON)
+
 	e := echo.New()
 	// inject err handler
 	e.HTTPErrorHandler = terrorHTTPErrorHandler
 	// middlewares
-	e.Pre(docMW)
 	// set logger
 	logger := log.L().Logger
 	logger = logger.With(zap.String("component", "openapi"))
@@ -61,6 +64,9 @@ func (s *Server) InitOpenAPIHandles() {
 	// use our validation middleware to check all requests against the OpenAPI schema.
 	e.Use(middleware.OapiRequestValidator(swagger))
 	openapi.RegisterHandlers(e, s)
+	// add doc handler
+	e.GET(docCFG.DocPath, docUIHandler)
+	e.GET(docCFG.SpecJSONPath, docJSONHandler)
 	s.echo = e
 }
 
@@ -74,6 +80,16 @@ func (s *Server) redirectRequestToLeader(ctx context.Context) (needRedirect bool
 	// nolint:dogsled
 	_, _, leaderOpenAPIAddr, err := s.election.LeaderInfo(ctx)
 	return true, leaderOpenAPIAddr, err
+}
+
+// GetDocJson url is:(POST /api/v1/docs).
+func (s *Server) GetDocJSON(ctx echo.Context) error {
+	return nil
+}
+
+// GetDocHtml url is:(POST /api/v1/dm.json).
+func (s *Server) GetDocHTML(ctx echo.Context) error {
+	return nil
 }
 
 // DMAPICreateSource url is:(POST /api/v1/sources).
