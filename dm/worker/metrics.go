@@ -22,6 +22,7 @@ import (
 
 	cpu "github.com/pingcap/tidb-tools/pkg/utils"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/pingcap/dm/dm/common"
@@ -64,7 +65,7 @@ var (
 			Subsystem: "worker",
 			Name:      "cpu_usage",
 			Help:      "the cpu usage of worker",
-		})
+		}, []string{"name"})
 )
 
 type statusHandler struct{}
@@ -102,19 +103,24 @@ func (s *Server) runBackgroundJob(ctx context.Context) {
 
 // RegistryMetrics registries metrics for worker.
 func RegistryMetrics() {
+	// mark
 	registry := prometheus.NewRegistry()
-	registry.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
-	registry.MustRegister(prometheus.NewGoCollector())
+	// default collector
+	registry.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
+	registry.MustRegister(collectors.NewGoCollector())
+	// registry.MustRegister(collectors.NewDBStatsCollector("test_db")) //
 
+	// dm-worker metrics
 	registry.MustRegister(cpuUsageGauge)
-
 	registry.MustRegister(taskState)
 	registry.MustRegister(opErrCounter)
 
+	// other unit metrics
 	relay.RegisterMetrics(registry)
 	dumpling.RegisterMetrics(registry)
 	loader.RegisterMetrics(registry)
 	syncer.RegisterMetrics(registry)
+
 	prometheus.DefaultGatherer = registry
 }
 

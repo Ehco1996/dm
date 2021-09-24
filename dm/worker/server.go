@@ -119,7 +119,7 @@ func (s *Server) Start() error {
 
 	s.wg.Add(1)
 	go func() {
-		s.runBackgroundJob(s.ctx)
+		s.runBackgroundJob(s.ctx, s.cfg.Name)
 		s.wg.Done()
 	}()
 
