@@ -103,6 +103,7 @@ def start_relay_success_with_two_worker(source_name, worker1_name, worker2_name)
         "purge": {"interval": 3600, "expires": 0, "remain_space": 15},
     }
     resp = requests.post(url=url, json=req)
+    # gkd
     assert resp.status_code == 200
 
 
